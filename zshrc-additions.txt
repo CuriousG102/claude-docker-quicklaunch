@@ -1,0 +1,14 @@
+# Claude Code Docker Quick Launch
+# Add this to your ~/.zshrc file
+
+# Source Claude functions
+source ~/claude_docker_quicklaunch/claude-functions.sh
+
+# Convenient aliases
+alias cn='claude-new'      # Create new workspace
+alias cu='claude-up'       # Start container in current workspace  
+alias cd='claude-down'     # Stop container
+alias cl='claude-list'     # List workspaces
+alias ccd='claude-cd'      # Enter workspace directory
+alias crm='claude-rm'      # Remove workspace
+alias cq='claude-quick'    # Quick create & launch
