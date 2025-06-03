@@ -61,8 +61,19 @@ claude-down() {
         return 1
     fi
     
-    echo "🛑 Stopping Claude Code container..."
-    devcontainer down --workspace-folder .
+    echo "🛑 Stopping and removing Claude Code container..."
+    local workspace_path=$(pwd)
+    
+    # Find and stop/remove containers for this workspace
+    local container_ids=$(docker ps -a --filter "label=devcontainer.local_folder=${workspace_path}" --format "{{.ID}}")
+    
+    if [ -n "$container_ids" ]; then
+        echo "🧹 Found containers: $container_ids"
+        docker rm -f $container_ids
+        echo "✅ Containers removed"
+    else
+        echo "ℹ️  No containers found for this workspace"
+    fi
 }
 
 # List all Claude workspaces
@@ -133,7 +144,7 @@ claude-rm() {
     read -r response
     if [[ "$response" =~ ^[Yy]$ ]]; then
         # Stop container if running
-        (cd "$workspace_path" && devcontainer down --workspace-folder . 2>/dev/null || true)
+        (cd "$workspace_path" && claude-down 2>/dev/null || true)
         
         # Remove workspace
         rm -rf "$workspace_path"
