@@ -27,6 +27,11 @@ claude-new() {
     cp "${CLAUDE_BASE_DIR}/devcontainer.json" "${workspace_path}/.devcontainer/"
     cp "${CLAUDE_BASE_DIR}/init-firewall.sh" "${workspace_path}/.devcontainer/"
     
+    # Copy custom firewall script if it exists
+    if [ -f "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" ]; then
+        cp "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" "${workspace_path}/.devcontainer/"
+    fi
+    
     # Copy allowed domains to workspace if exists (visible to Claude and firewall script)
     if [ -f "${CLAUDE_BASE_DIR}/allowed-domains.txt" ]; then
         cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/workspace/"
