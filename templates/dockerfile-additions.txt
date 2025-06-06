@@ -1,0 +1,11 @@
+# Add custom firewall script for domain management
+COPY init-firewall-custom.sh /usr/local/bin/init-firewall-custom.sh
+USER root
+RUN chmod +x /usr/local/bin/init-firewall-custom.sh
+
+# Grant sudo permissions for custom firewall script
+RUN echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall-custom.sh" > /etc/sudoers.d/node-firewall-custom && \
+    chmod 0440 /etc/sudoers.d/node-firewall-custom
+
+# Switch back to node user
+USER node

@@ -26,6 +26,20 @@ claude-new() {
     cp "${CLAUDE_BASE_DIR}/devcontainer.json" "${workspace_path}/.devcontainer/"
     cp "${CLAUDE_BASE_DIR}/init-firewall.sh" "${workspace_path}/.devcontainer/"
     
+    
+    # Copy allowed domains if exists
+    if [ -f "${CLAUDE_BASE_DIR}/allowed-domains.txt" ]; then
+        cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/.devcontainer/"
+    fi
+    
+    # Create empty firewall requests file
+    touch "${workspace_path}/.devcontainer/firewall-requests.txt"
+    
+    # Copy CLAUDE.md template if it exists
+    if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md" ]; then
+        cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/"
+    fi
+    
     echo "✅ Workspace created: ${workspace_path}"
     echo "📂 Switching to workspace..."
     cd "${workspace_path}"
@@ -158,3 +172,173 @@ claude-quick() {
     
     claude-new "$workspace_name" && claude-up
 }
+
+# === Firewall Management Commands ===
+
+# Review pending firewall domain requests
+claude-firewall-review() {
+    local workspace_path="$(pwd)"
+    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    
+    if [ ! -f "$requests_file" ]; then
+        # Check if we're in a workspace
+        if [ ! -f ".devcontainer/devcontainer.json" ]; then
+            echo "❌ Not in a Claude workspace"
+            return 1
+        fi
+        echo "📋 No pending firewall requests"
+        return 0
+    fi
+    
+    echo "🔥 Pending Firewall Domain Requests:"
+    echo "===================================="
+    cat "$requests_file" | nl -b a
+    echo ""
+    echo "To approve: claude-firewall-approve <domain>"
+    echo "To deny: claude-firewall-deny <domain>"
+}
+
+# Approve a domain for firewall access
+claude-firewall-approve() {
+    local domain="$1"
+    
+    if [ -z "$domain" ]; then
+        echo "Usage: claude-firewall-approve <domain>"
+        return 1
+    fi
+    
+    local allowed_file="${CLAUDE_BASE_DIR}/allowed-domains.txt"
+    local workspace_path="$(pwd)"
+    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    
+    # Check if we're in a workspace
+    if [ ! -f ".devcontainer/devcontainer.json" ]; then
+        echo "❌ Not in a Claude workspace"
+        return 1
+    fi
+    
+    # Add to allowed domains
+    echo "$domain # Approved $(date +%Y-%m-%d)" >> "$allowed_file"
+    echo "✅ Domain approved: $domain"
+    
+    # Remove from requests if present
+    if [ -f "$requests_file" ]; then
+        grep -v "^$domain" "$requests_file" > "${requests_file}.tmp" || true
+        mv "${requests_file}.tmp" "$requests_file"
+    fi
+    
+    # Copy to workspace
+    cp "$allowed_file" ".devcontainer/allowed-domains.txt"
+    echo "📝 Updated workspace allowed domains"
+    
+    # Apply firewall changes live in the running container
+    echo "🔄 Applying firewall changes..."
+    if devcontainer exec --workspace-folder . bash -c "
+        if [ -f /usr/local/bin/init-firewall-custom.sh ]; then
+            echo 'Reloading custom firewall rules...'
+            sudo /usr/local/bin/init-firewall-custom.sh
+            echo 'Firewall rules updated'
+        else
+            echo 'Custom firewall script not found'
+            exit 1
+        fi
+    " 2>/dev/null; then
+        echo "✅ Firewall updated successfully"
+        echo "🧪 Testing access to $domain..."
+        
+        # Test the domain
+        if devcontainer exec --workspace-folder . bash -c "
+            timeout 10 curl -s -o /dev/null -w '%{http_code}' https://$domain > /dev/null 2>&1
+        " 2>/dev/null; then
+            echo "✅ Domain $domain is now accessible"
+        else
+            echo "⚠️  Domain may not be accessible yet (could be DNS or other issues)"
+        fi
+    else
+        echo "❌ Failed to update firewall - container may not be running"
+        echo "💡 Try: claude-down && claude-up"
+    fi
+}
+
+# Deny a domain request
+claude-firewall-deny() {
+    local domain="$1"
+    
+    if [ -z "$domain" ]; then
+        echo "Usage: claude-firewall-deny <domain>"
+        return 1
+    fi
+    
+    local workspace_path="$(pwd)"
+    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    
+    if [ ! -f "$requests_file" ]; then
+        echo "❌ No firewall requests file found"
+        return 1
+    fi
+    
+    # Remove from requests
+    grep -v "^$domain" "$requests_file" > "${requests_file}.tmp" || true
+    mv "${requests_file}.tmp" "$requests_file"
+    echo "❌ Domain denied: $domain"
+}
+
+# List all allowed domains
+claude-firewall-list() {
+    local allowed_file="${CLAUDE_BASE_DIR}/allowed-domains.txt"
+    
+    echo "🌐 Allowed Domains:"
+    echo "=================="
+    
+    # Show default allowed domains
+    echo ""
+    echo "Default domains (from init-firewall.sh):"
+    echo "  - github.com (and all GitHub IPs)"
+    echo "  - registry.npmjs.org"
+    echo "  - api.anthropic.com"
+    echo "  - statsig.anthropic.com"
+    echo "  - sentry.io"
+    echo "  - statsig.com"
+    
+    # Show user-approved domains
+    if [ -f "$allowed_file" ]; then
+        echo ""
+        echo "User-approved domains:"
+        cat "$allowed_file" | grep -v '^#' | grep -v '^[[:space:]]*$' | while IFS= read -r line; do
+            echo "  - $line"
+        done
+    fi
+}
+
+# Test if a domain is accessible
+claude-firewall-test() {
+    local domain="$1"
+    
+    if [ -z "$domain" ]; then
+        echo "Usage: claude-firewall-test <domain>"
+        return 1
+    fi
+    
+    if [ ! -f ".devcontainer/devcontainer.json" ]; then
+        echo "❌ Not in a Claude workspace"
+        return 1
+    fi
+    
+    echo "🧪 Testing domain: $domain"
+    
+    # Test from within container
+    if devcontainer exec --workspace-folder . bash -c "
+        timeout 10 curl -s -o /dev/null -w '%{http_code}' https://$domain > /dev/null 2>&1
+    " 2>/dev/null; then
+        echo "✅ Domain $domain is accessible"
+    else
+        echo "❌ Domain $domain is blocked or unreachable"
+        echo ""
+        echo "To request access:"
+        echo "1. From inside the container, run:"
+        echo "   echo \"$domain # Reason for access\" >> /workspaces/workspace/.devcontainer/firewall-requests.txt"
+        echo "2. From the host, run:"
+        echo "   claude-firewall-approve $domain"
+    fi
+}
+
