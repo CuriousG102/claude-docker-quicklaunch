@@ -73,7 +73,7 @@ add_domain() {
 }
 
 # Load allowed domains from file
-ALLOWED_DOMAINS_FILE="/workspaces/workspace/.devcontainer/allowed-domains.txt"
+ALLOWED_DOMAINS_FILE="/workspace/allowed-domains.txt"
 
 if [ -f "$ALLOWED_DOMAINS_FILE" ]; then
     echo "Loading domains from $ALLOWED_DOMAINS_FILE"
@@ -96,7 +96,7 @@ else
 fi
 
 # Load firewall requests for logging
-REQUESTS_FILE="/workspaces/workspace/.devcontainer/firewall-requests.txt"
+REQUESTS_FILE="/workspace/firewall-requests.txt"
 
 if [ -f "$REQUESTS_FILE" ]; then
     echo ""

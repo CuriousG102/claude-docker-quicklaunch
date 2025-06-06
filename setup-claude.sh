@@ -31,6 +31,9 @@ if [ -f "${TEMPLATE_DIR}/dockerfile-additions.txt" ]; then
     cat "${TEMPLATE_DIR}/dockerfile-additions.txt" >> Dockerfile
 fi
 
+# Modify devcontainer.json to mount workspace subdirectory
+sed -i '' 's|source=${localWorkspaceFolder},target=/workspace|source=${localWorkspaceFolder}/workspace,target=/workspace|g' devcontainer.json
+
 # Modify init-firewall.sh to call custom script
 echo "" >> init-firewall.sh
 echo "# Load custom firewall rules if script exists" >> init-firewall.sh

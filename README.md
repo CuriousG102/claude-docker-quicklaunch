@@ -69,8 +69,9 @@ A simple tool for managing isolated Docker workspaces for [Claude Code](https://
 
 1. **Setup** downloads the official `.devcontainer/` files from [anthropics/claude-code](https://github.com/anthropics/claude-code/tree/main/.devcontainer)
 2. **Workspaces** are created in `~/claude-workspaces/` with their own copy of the devcontainer config
-3. **Launch** uses `devcontainer up` to start containers with the official Anthropic configuration
-4. **Isolation** ensures each task gets its own container and workspace
+3. **Clean Structure** - `.devcontainer/` stays at the project root (hidden from Claude), while `workspace/` is mounted into the container
+4. **Launch** uses `devcontainer up` to start containers with the official Anthropic configuration
+5. **Isolation** ensures each task gets its own container and workspace
 
 ## New Features
 
@@ -126,8 +127,11 @@ The `--dangerously-skip-permissions` flag is only usable in Docker containers wi
 
 ~/claude-workspaces/          # Your isolated workspaces
 ├── project1/
-│   ├── .devcontainer/
-│   └── CLAUDE.md            # Workspace instructions
+│   ├── .devcontainer/       # Hidden from Claude Code
+│   └── workspace/           # Mounted as /workspace in container
+│       ├── CLAUDE.md        # Instructions visible to Claude
+│       ├── allowed-domains.txt
+│       └── firewall-requests.txt
 ├── project2/
 └── ...
 ```

@@ -6,7 +6,7 @@ When you encounter a blocked domain that you need to access:
 
 1. **Add the domain to the firewall requests file:**
    ```bash
-   echo "domain.com # Reason for access" >> /workspaces/workspace/.devcontainer/firewall-requests.txt
+   echo "domain.com # Reason for access" >> /workspace/firewall-requests.txt
    ```
 
 2. **IMMEDIATELY notify the user** with this exact message:

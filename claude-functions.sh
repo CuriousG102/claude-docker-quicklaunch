@@ -18,26 +18,26 @@ claude-new() {
     
     echo "🚀 Creating workspace: ${workspace_name}"
     
-    # Create workspace directory
+    # Create workspace directory structure
     mkdir -p "${workspace_path}/.devcontainer"
+    mkdir -p "${workspace_path}/workspace"
     
     # Copy devcontainer files
     cp "${CLAUDE_BASE_DIR}/Dockerfile" "${workspace_path}/.devcontainer/"
     cp "${CLAUDE_BASE_DIR}/devcontainer.json" "${workspace_path}/.devcontainer/"
     cp "${CLAUDE_BASE_DIR}/init-firewall.sh" "${workspace_path}/.devcontainer/"
     
-    
-    # Copy allowed domains if exists
+    # Copy allowed domains to workspace if exists (visible to Claude and firewall script)
     if [ -f "${CLAUDE_BASE_DIR}/allowed-domains.txt" ]; then
-        cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/.devcontainer/"
+        cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/workspace/"
     fi
     
-    # Create empty firewall requests file
-    touch "${workspace_path}/.devcontainer/firewall-requests.txt"
+    # Create empty firewall requests file in workspace
+    touch "${workspace_path}/workspace/firewall-requests.txt"
     
-    # Copy CLAUDE.md template if it exists
+    # Copy CLAUDE.md template to workspace directory (visible to Claude)
     if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md" ]; then
-        cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/"
+        cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/workspace/"
     fi
     
     echo "✅ Workspace created: ${workspace_path}"
@@ -178,7 +178,7 @@ claude-quick() {
 # Review pending firewall domain requests
 claude-firewall-review() {
     local workspace_path="$(pwd)"
-    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    local requests_file="${workspace_path}/workspace/firewall-requests.txt"
     
     if [ ! -f "$requests_file" ]; then
         # Check if we're in a workspace
@@ -209,7 +209,7 @@ claude-firewall-approve() {
     
     local allowed_file="${CLAUDE_BASE_DIR}/allowed-domains.txt"
     local workspace_path="$(pwd)"
-    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    local requests_file="${workspace_path}/workspace/firewall-requests.txt"
     
     # Check if we're in a workspace
     if [ ! -f ".devcontainer/devcontainer.json" ]; then
@@ -228,7 +228,7 @@ claude-firewall-approve() {
     fi
     
     # Copy to workspace
-    cp "$allowed_file" ".devcontainer/allowed-domains.txt"
+    cp "$allowed_file" "workspace/allowed-domains.txt"
     echo "📝 Updated workspace allowed domains"
     
     # Apply firewall changes live in the running container
@@ -270,7 +270,7 @@ claude-firewall-deny() {
     fi
     
     local workspace_path="$(pwd)"
-    local requests_file="${workspace_path}/.devcontainer/firewall-requests.txt"
+    local requests_file="${workspace_path}/workspace/firewall-requests.txt"
     
     if [ ! -f "$requests_file" ]; then
         echo "❌ No firewall requests file found"
@@ -336,7 +336,7 @@ claude-firewall-test() {
         echo ""
         echo "To request access:"
         echo "1. From inside the container, run:"
-        echo "   echo \"$domain # Reason for access\" >> /workspaces/workspace/.devcontainer/firewall-requests.txt"
+        echo "   echo \"$domain # Reason for access\" >> /workspace/firewall-requests.txt"
         echo "2. From the host, run:"
         echo "   claude-firewall-approve $domain"
     fi
