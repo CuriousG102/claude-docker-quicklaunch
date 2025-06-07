@@ -20,6 +20,15 @@ When you encounter a blocked domain that you need to access:
 
 3. **Wait for the user to confirm** the domain has been approved before attempting to access it again. The firewall will be updated automatically without requiring a restart.
 
+## MCP Puppeteer Integration
+
+This workspace includes MCP Puppeteer for browser automation:
+
+- **Available Tools:** Screenshot capture, web navigation, element interaction, JavaScript execution
+- **Configuration:** Automatically configured on first workspace startup
+- **Installation:** Uses NPX to install @modelcontextprotocol/server-puppeteer as needed
+- **No Manual Setup:** Everything is handled automatically
+
 
 ## Testing and Development Commands
 

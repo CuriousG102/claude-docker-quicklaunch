@@ -45,6 +45,8 @@ claude-new() {
         cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/workspace/"
     fi
     
+    # MCP Puppeteer will be configured automatically on first startup
+    
     echo "✅ Workspace created: ${workspace_path}"
     echo "📂 Switching to workspace..."
     cd "${workspace_path}"
@@ -64,9 +66,12 @@ claude-up() {
     # Start the devcontainer
     devcontainer up --workspace-folder .
     
-    # Execute into the container
+    # Execute into the container and set up MCP Puppeteer
     devcontainer exec --workspace-folder . bash -c "
         echo '🎉 Claude Code is ready!'
+        echo '🎭 Setting up MCP Puppeteer...'
+        claude mcp add puppeteer -s user -- npx -y @modelcontextprotocol/server-puppeteer
+        echo '✅ MCP Puppeteer configured!'
         echo '📝 Run: claude --dangerously-skip-permissions'
         echo ''
         exec zsh

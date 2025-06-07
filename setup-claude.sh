@@ -5,6 +5,8 @@ set -e
 
 CLAUDE_BASE_DIR="${HOME}/.claude-devcontainer"
 WORKSPACES_DIR="${HOME}/claude-workspaces"
+# Set template directory path as absolute path before changing directories
+TEMPLATE_DIR="$(cd "$(dirname "$0")" && pwd)/templates"
 
 echo "🔧 Setting up Claude Code environment..."
 
@@ -46,10 +48,10 @@ echo "fi" >> init-firewall.sh
 mkdir -p "${WORKSPACES_DIR}"
 
 # Copy local template files if they exist
-TEMPLATE_DIR="$(dirname "$0")/templates"
 if [ -d "${TEMPLATE_DIR}" ]; then
     echo "📦 Copying additional template files..."
-    cp -r "${TEMPLATE_DIR}"/* "${CLAUDE_BASE_DIR}/" 2>/dev/null || true
+    # Copy all files including hidden ones
+    (cd "${TEMPLATE_DIR}" && cp -r . "${CLAUDE_BASE_DIR}/") 2>/dev/null || true
     
     # Make scripts executable
     chmod +x "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" 2>/dev/null || true
@@ -69,8 +71,12 @@ echo "📁 Base devcontainer: ${CLAUDE_BASE_DIR}"
 echo "📁 Workspaces: ${WORKSPACES_DIR}"
 echo ""
 echo "🚀 New features:"
-echo "  - Puppeteer integration for browser automation"
+echo "  - MCP Puppeteer integration for browser automation"
 echo "  - Dynamic firewall domain management"
+echo "  - Isolated Docker networks per workspace"
 echo ""
-echo "Next: Add to your .zshrc:"
-echo "source ~/claude_docker_quicklaunch/claude-functions.sh"
+echo "📋 Next steps:"
+echo "1. Add to your .zshrc:"
+echo "   source ~/claude_docker_quicklaunch/claude-functions.sh"
+echo ""
+echo "2. MCP Puppeteer will be automatically installed via NPX when needed"
