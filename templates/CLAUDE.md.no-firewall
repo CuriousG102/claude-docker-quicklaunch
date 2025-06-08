@@ -1,0 +1,20 @@
+# Claude Code Workspace Instructions
+
+## Container Configuration
+
+This workspace is configured with:
+- MCP Puppeteer support for browser automation (automatically configured)
+
+## MCP Puppeteer Integration
+
+This workspace includes MCP Puppeteer for browser automation:
+
+- **Available Tools:** Screenshot capture, web navigation, element interaction, JavaScript execution
+- **Configuration:** Automatically configured on first workspace startup
+- **Installation:** Uses NPX to install @modelcontextprotocol/server-puppeteer as needed
+- **No Manual Setup:** Everything is handled automatically
+
+## Workspace-Specific Notes
+
+Add any project-specific instructions below this line:
+---

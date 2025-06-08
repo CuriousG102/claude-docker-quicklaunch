@@ -73,9 +73,15 @@ claude-new() {
         touch "${workspace_path}/workspace/firewall-requests.txt"
     fi
     
-    # Copy CLAUDE.md template to workspace directory (visible to Claude)
-    if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md" ]; then
-        cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/workspace/"
+    # Copy appropriate CLAUDE.md template to workspace directory (visible to Claude)
+    if [ "$no_firewall" = false ]; then
+        if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md" ]; then
+            cp "${CLAUDE_BASE_DIR}/CLAUDE.md" "${workspace_path}/workspace/"
+        fi
+    else
+        if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md.no-firewall" ]; then
+            cp "${CLAUDE_BASE_DIR}/CLAUDE.md.no-firewall" "${workspace_path}/workspace/CLAUDE.md"
+        fi
     fi
     
     # MCP Puppeteer will be configured automatically on first startup

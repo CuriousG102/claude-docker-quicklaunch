@@ -36,13 +36,6 @@ This workspace includes MCP Puppeteer for browser automation:
 - **No Manual Setup:** Everything is handled automatically
 
 
-## Testing and Development Commands
-
-Remember to run these commands when appropriate:
-- `npm test` - Run tests
-- `npm run lint` - Check code style
-- `npm run build` - Build the project
-
 ## Workspace-Specific Notes
 
 Add any project-specific instructions below this line:
