@@ -112,6 +112,60 @@ claude-firewall-approve api.example.com
 
 The firewall rules are updated live without requiring a container restart.
 
+## Port Forwarding
+
+To access programs running inside containers from your host machine, you can configure port forwarding:
+
+### Option 1: Edit devcontainer.json (Recommended)
+
+For existing workspaces, edit the `devcontainer.json` file in your workspace:
+
+```bash
+cd ~/claude-workspaces/your-workspace/.devcontainer
+# Edit devcontainer.json
+```
+
+Add port forwarding configuration:
+
+```json
+{
+  "forwardPorts": [3000, 8080, 5173],
+  "portsAttributes": {
+    "3000": {
+      "label": "Development Server",
+      "onAutoForward": "notify"
+    },
+    "8080": {
+      "label": "API Server", 
+      "onAutoForward": "openPreview"
+    }
+  }
+}
+```
+
+Then restart the container:
+```bash
+claude-down
+claude-up
+```
+
+### Option 2: Docker Port Mapping
+
+Alternatively, add direct port mapping via Docker in `devcontainer.json`:
+
+```json
+{
+  "runArgs": [
+    "--cap-add=NET_ADMIN",
+    "--cap-add=NET_RAW",
+    "-p", "3000:3000",
+    "-p", "8080:8080"
+  ]
+}
+```
+
+**Note**: The firewall system only controls outbound domain access - inbound port forwarding works regardless of firewall settings.
+
 ## Security
 
 This setup uses the official Claude Code Docker configuration, which includes:
