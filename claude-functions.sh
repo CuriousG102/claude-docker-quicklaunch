@@ -8,7 +8,25 @@ export CLAUDE_WORKSPACES_DIR="${HOME}/claude-workspaces"
 
 # Create a new Claude workspace
 claude-new() {
-    local workspace_name="${1:-claude-$(date +%Y%m%d-%H%M%S)}"
+    local no_firewall=false
+    local workspace_name=""
+    
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --no-firewall)
+                no_firewall=true
+                shift
+                ;;
+            *)
+                workspace_name="$1"
+                shift
+                ;;
+        esac
+    done
+    
+    # Set default name if not provided
+    workspace_name="${workspace_name:-claude-$(date +%Y%m%d-%H%M%S)}"
     local workspace_path="${CLAUDE_WORKSPACES_DIR}/${workspace_name}"
     
     if [ -d "$workspace_path" ]; then
@@ -23,22 +41,37 @@ claude-new() {
     mkdir -p "${workspace_path}/workspace"
     
     # Copy devcontainer files
-    cp "${CLAUDE_BASE_DIR}/Dockerfile" "${workspace_path}/.devcontainer/"
     cp "${CLAUDE_BASE_DIR}/devcontainer.json" "${workspace_path}/.devcontainer/"
-    cp "${CLAUDE_BASE_DIR}/init-firewall.sh" "${workspace_path}/.devcontainer/"
     
-    # Copy custom firewall script if it exists
-    if [ -f "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" ]; then
-        cp "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" "${workspace_path}/.devcontainer/"
+    if [ "$no_firewall" = false ]; then
+        # Copy full Dockerfile with firewall additions
+        cp "${CLAUDE_BASE_DIR}/Dockerfile" "${workspace_path}/.devcontainer/"
+        # Copy firewall script
+        cp "${CLAUDE_BASE_DIR}/init-firewall.sh" "${workspace_path}/.devcontainer/"
+    else
+        echo "⚠️  Creating workspace without firewall protection"
+        # Copy clean Dockerfile without firewall additions
+        cp "${CLAUDE_BASE_DIR}/Dockerfile.no-firewall" "${workspace_path}/.devcontainer/Dockerfile"
+        # Create a dummy init-firewall.sh that does nothing
+        echo '#!/bin/bash' > "${workspace_path}/.devcontainer/init-firewall.sh"
+        echo 'echo "Firewall disabled for this workspace"' >> "${workspace_path}/.devcontainer/init-firewall.sh"
+        chmod +x "${workspace_path}/.devcontainer/init-firewall.sh"
     fi
     
-    # Copy allowed domains to workspace if exists (visible to Claude and firewall script)
-    if [ -f "${CLAUDE_BASE_DIR}/allowed-domains.txt" ]; then
-        cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/workspace/"
+    if [ "$no_firewall" = false ]; then
+        # Copy custom firewall script if it exists
+        if [ -f "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" ]; then
+            cp "${CLAUDE_BASE_DIR}/init-firewall-custom.sh" "${workspace_path}/.devcontainer/"
+        fi
+        
+        # Copy allowed domains to workspace if exists (visible to Claude and firewall script)
+        if [ -f "${CLAUDE_BASE_DIR}/allowed-domains.txt" ]; then
+            cp "${CLAUDE_BASE_DIR}/allowed-domains.txt" "${workspace_path}/workspace/"
+        fi
+        
+        # Create empty firewall requests file in workspace
+        touch "${workspace_path}/workspace/firewall-requests.txt"
     fi
-    
-    # Create empty firewall requests file in workspace
-    touch "${workspace_path}/workspace/firewall-requests.txt"
     
     # Copy CLAUDE.md template to workspace directory (visible to Claude)
     if [ -f "${CLAUDE_BASE_DIR}/CLAUDE.md" ]; then
@@ -48,6 +81,9 @@ claude-new() {
     # MCP Puppeteer will be configured automatically on first startup
     
     echo "✅ Workspace created: ${workspace_path}"
+    if [ "$no_firewall" = true ]; then
+        echo "⚠️  Firewall disabled - container will have unrestricted internet access"
+    fi
     echo "📂 Switching to workspace..."
     cd "${workspace_path}"
 }
@@ -62,6 +98,11 @@ claude-up() {
     
     echo "🐳 Starting Claude Code container..."
     echo "📍 Workspace: $(pwd)"
+    
+    # Check if firewall is disabled by examining init-firewall.sh
+    if grep -q "Firewall disabled for this workspace" ".devcontainer/init-firewall.sh" 2>/dev/null; then
+        echo "⚠️  Starting container without firewall protection"
+    fi
     
     # Start the devcontainer
     devcontainer up --workspace-folder .
@@ -178,9 +219,30 @@ claude-rm() {
 
 # Quick launch - create and start in one command
 claude-quick() {
-    local workspace_name="${1:-quick-$(date +%H%M%S)}"
+    local workspace_name=""
+    local no_firewall=false
     
-    claude-new "$workspace_name" && claude-up
+    # Parse arguments
+    while [[ $# -gt 0 ]]; do
+        case $1 in
+            --no-firewall)
+                no_firewall=true
+                shift
+                ;;
+            *)
+                workspace_name="$1"
+                shift
+                ;;
+        esac
+    done
+    
+    workspace_name="${workspace_name:-quick-$(date +%H%M%S)}"
+    
+    if [ "$no_firewall" = true ]; then
+        claude-new --no-firewall "$workspace_name" && claude-up
+    else
+        claude-new "$workspace_name" && claude-up
+    fi
 }
 
 # === Firewall Management Commands ===

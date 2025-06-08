@@ -9,6 +9,7 @@ A simple tool for managing isolated Docker workspaces for [Claude Code](https://
 - Provides simple commands to launch, manage, and clean up containers
 - Uses `--dangerously-skip-permissions` in secure Docker environments
 - **NEW**: Dynamic firewall domain approval system
+- **NEW**: Optional firewall bypass for unrestricted containers
 
 ## Prerequisites
 
@@ -48,12 +49,14 @@ A simple tool for managing isolated Docker workspaces for [Claude Code](https://
 | Command | Description |
 |---------|-------------|
 | `claude-new <name>` | Create a new workspace |
+| `claude-new --no-firewall <name>` | Create workspace without firewall |
 | `claude-up` | Start container in current workspace |
 | `claude-down` | Stop container |
 | `claude-list` | List all workspaces |
 | `claude-cd <name>` | Enter workspace directory |
 | `claude-rm <name>` | Remove workspace |
 | `claude-quick <name>` | Create and launch in one command |
+| `claude-quick --no-firewall <name>` | Quick launch without firewall |
 
 ### Firewall Management
 | Command | Description |
@@ -74,6 +77,20 @@ A simple tool for managing isolated Docker workspaces for [Claude Code](https://
 5. **Isolation** ensures each task gets its own container and workspace
 
 ## New Features
+
+### Optional Firewall Protection
+
+By default, Claude Code containers run with network restrictions for security. You can now optionally disable the firewall:
+
+```bash
+# Create a workspace without firewall restrictions
+claude-new --no-firewall myproject
+
+# Or use quick launch
+claude-quick --no-firewall test-api
+```
+
+⚠️ **Warning**: Disabling the firewall gives the container unrestricted internet access. Only use this option when you need to access many external APIs or services and understand the security implications.
 
 ### Dynamic Firewall Management
 

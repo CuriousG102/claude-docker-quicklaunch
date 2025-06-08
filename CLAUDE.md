@@ -13,6 +13,7 @@ source ~/claude_docker_quicklaunch/claude-functions.sh  # Load workspace managem
 **Workspace Management:**
 ```bash
 claude-new <name>          # Create new isolated workspace
+claude-new --no-firewall <name>  # Create workspace without firewall restrictions
 claude-up                  # Start container in current workspace  
 claude-down                # Stop container
 claude-rm <name>           # Remove workspace completely
@@ -42,7 +43,7 @@ This is a **workspace management tool** for Claude Code that provides secure, is
 
 **Workspace Isolation:** Each workspace gets its own container built from modified official Anthropic devcontainer files. The `.devcontainer/` directory contains infrastructure (hidden from Claude Code), while `workspace/` contains the actual working files (mounted as `/workspace` in container).
 
-**Security Model:** Implements a firewall approval workflow where Claude Code can request domain access by writing to `/workspace/firewall-requests.txt`, and users approve domains using `claude-firewall-approve <domain>` which updates iptables rules live without container restart.
+**Security Model:** Implements a firewall approval workflow where Claude Code can request domain access by writing to `/workspace/firewall-requests.txt`, and users approve domains using `claude-firewall-approve <domain>` which updates iptables rules live without container restart. The firewall can be optionally disabled during workspace creation with `--no-firewall` flag for unrestricted network access.
 
 **File Modification Strategy:** Downloads official files from Anthropic's repository, then modifies them programmatically:
 - Appends custom Dockerfile instructions for firewall script installation

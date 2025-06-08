@@ -27,7 +27,10 @@ curl -sL https://raw.githubusercontent.com/anthropics/claude-code/main/.devconta
 curl -sL https://raw.githubusercontent.com/anthropics/claude-code/main/.devcontainer/init-firewall.sh -o init-firewall.sh
 chmod +x init-firewall.sh
 
-# Modify Dockerfile to include custom firewall script
+# Create clean Dockerfile without firewall for --no-firewall option
+cp Dockerfile Dockerfile.no-firewall
+
+# Modify main Dockerfile to include custom firewall script
 if [ -f "${TEMPLATE_DIR}/dockerfile-additions.txt" ]; then
     echo "🔧 Adding custom firewall script to Dockerfile..."
     cat "${TEMPLATE_DIR}/dockerfile-additions.txt" >> Dockerfile

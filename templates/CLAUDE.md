@@ -1,5 +1,11 @@
 # Claude Code Workspace Instructions
 
+## Container Configuration
+
+This workspace is configured with:
+- MCP Puppeteer support for browser automation (automatically configured)
+- Network firewall protection (unless created with --no-firewall flag)
+
 ## Important: Domain Access Requests
 
 When you encounter a blocked domain that you need to access:
