@@ -30,6 +30,21 @@ chmod +x init-firewall.sh
 # Create clean Dockerfile without firewall for --no-firewall option
 cp Dockerfile Dockerfile.no-firewall
 
+# Add essential additions to no-firewall Dockerfile (Chromium + sudo)
+if [ -f "${TEMPLATE_DIR}/dockerfile-additions.txt" ]; then
+    echo "🔧 Adding browser automation support to no-firewall Dockerfile..."
+    # Add Chromium installation and sudo access  
+    echo "" >> Dockerfile.no-firewall
+    echo "USER root" >> Dockerfile.no-firewall
+    echo "# Install Chromium for browser automation" >> Dockerfile.no-firewall
+    echo "RUN apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*" >> Dockerfile.no-firewall
+    echo "" >> Dockerfile.no-firewall
+    echo "# Grant general passwordless sudo for development tasks" >> Dockerfile.no-firewall
+    echo "RUN echo \"node ALL=(root) NOPASSWD: ALL\" > /etc/sudoers.d/node-general && \\" >> Dockerfile.no-firewall
+    echo "    chmod 0440 /etc/sudoers.d/node-general" >> Dockerfile.no-firewall
+    echo "USER node" >> Dockerfile.no-firewall
+fi
+
 # Modify main Dockerfile to include custom firewall script
 if [ -f "${TEMPLATE_DIR}/dockerfile-additions.txt" ]; then
     echo "🔧 Adding custom firewall script to Dockerfile..."

@@ -1,11 +1,19 @@
 # Add custom firewall script for domain management
 COPY init-firewall-custom.sh /usr/local/bin/init-firewall-custom.sh
 USER root
+
+# Install Chromium for browser automation
+RUN apt-get update && apt-get install -y chromium && rm -rf /var/lib/apt/lists/*
+
 RUN chmod +x /usr/local/bin/init-firewall-custom.sh
 
-# Grant sudo permissions for custom firewall script
+# Grant sudo permissions for custom firewall script and general package management
 RUN echo "node ALL=(root) NOPASSWD: /usr/local/bin/init-firewall-custom.sh" > /etc/sudoers.d/node-firewall-custom && \
     chmod 0440 /etc/sudoers.d/node-firewall-custom
+
+# Grant general passwordless sudo for development tasks
+RUN echo "node ALL=(root) NOPASSWD: ALL" > /etc/sudoers.d/node-general && \
+    chmod 0440 /etc/sudoers.d/node-general
 
 # Switch back to node user
 USER node
